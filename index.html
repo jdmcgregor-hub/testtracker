@@ -334,24 +334,30 @@
             };
         }
         
-        function simulateSendToGoogleSheets(workoutData) {
-            // In a real implementation, this would be replaced with actual code
-            // to send data to Google Sheets using Google Sheets API
-            
-            setTimeout(() => {
-                // Show success message
-                const successMessage = document.getElementById('successMessage');
-                successMessage.style.display = 'block';
-                successMessage.textContent = 'Workout submitted successfully! Data would be sent to Google Sheets.';
-                
-                // Scroll to success message
-                successMessage.scrollIntoView({ behavior: 'smooth' });
-                
-                // Hide after 5 seconds
-                setTimeout(() => {
-                    successMessage.style.display = 'none';
-                }, 5000);
-            }, 1000);
+        function submitForm(event) {
+    event.preventDefault();
+    
+    // Validate form
+    const form = document.getElementById('workoutForm');
+    if (!form.checkValidity()) {
+        alert('Please fill in all required fields.');
+        return;
+    }
+    
+    // Collect form data
+    const workoutData = collectFormData();
+    console.log('Workout data to send:', workoutData);
+    
+    // Send to Google Sheets
+    sendToGoogleSheets(workoutData);
+}
+
+function sendToGoogleSheets(workoutData) {
+    // Show loading state
+    const submitBtn = document.getElementById('submitBtn');
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = 'Submitting...';
+    submitBtn.disabled = true;
         }
     </script>
 </body>

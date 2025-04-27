@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gym Workout Tracker</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #0d47a1;
+            margin-bottom: 30px;
+        }
+        
+        .workout-form {
+            background-color: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        select, input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        
+        .exercise-container {
+            border: 1px solid #e0e0e0;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+        
+        .exercise-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .sets-container {
+            margin-top: 10px;
+        }
+        
+        .set-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .set-label {
+            width: 60px;
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+        }
+        
+        button {
+            padding: 12px 20px;
+            background-color: #0d47a1;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover {
+            background-color: #1565c0;
+        }
+        
+        .btn-remove {
+            background-color: #e53935;
+        }
+        
+        .btn-remove:hover {
+            background-color: #d32f2f;
+        }
+        
+        .btn-add-set {
+            background-color: #43a047;
+            padding: 8px 12px;
+            font-size: 14px;
+        }
+        
+        .btn-add-set:hover {
+            background-color: #388e3c;
+        }
+        
+        .btn-add-exercise {
+            background-color: #fb8c00;
+            margin-bottom: 20px;
+        }
+        
+        .btn-add-exercise:hover {
+            background-color: #f57c00;
+        }
+        
+        .buttons-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 25px;
+        }
+        
+        .timestamp {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .success-message {
+            display: none;
+            text-align: center;
+            background-color: #4caf50;
+            color: white;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Gym Workout Tracker</h1>
+        
+        <form id="workoutForm" class="workout-form">
+            <div class="form-group">
+                <label for="workoutDate">Workout Date:</label>
+                <input type="date" id="workoutDate" required>
+            </div>
+            
+            <div id="exercisesContainer"></div>
+            
+            <button type="button" id="addExerciseBtn" class="btn-add-exercise">Add Exercise</button>
+            
+            <div class="buttons-container">
+                <button type="button" id="clearFormBtn">Clear Form</button>
+                <button type="submit" id="submitBtn">Submit Workout</button>
+            </div>
+        </form>
+        
+        <div id="successMessage" class="success-message">
+            Workout submitted successfully!
+        </div>
+        
+        <div class="timestamp" id="timestamp"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set today's date as default
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('workoutDate').value = today;
+            
+            // Update timestamp
+            updateTimestamp();
+            setInterval(updateTimestamp, 60000);
+            
+            // Add first exercise by default
+            addExercise();
+            
+            // Add event listeners
+            document.getElementById('addExerciseBtn').addEventListener('click', addExercise);
+            document.getElementById('clearFormBtn').addEventListener('click', clearForm);
+            document.getElementById('workoutForm').addEventListener('submit', submitForm);
+        });
+        
+        function updateTimestamp() {
+            const now = new Date();
+            document.getElementById('timestamp').textContent = 'Current time: ' + 
+                now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
+        }
+        
+        function addExercise() {
+            const exercisesContainer = document.getElementById('exercisesContainer');
+            const exerciseId = 'exercise-' + Date.now();
+            
+            const exerciseDiv = document.createElement('div');
+            exerciseDiv.className = 'exercise-container';
+            exerciseDiv.id = exerciseId;
+            
+            exerciseDiv.innerHTML = `
+                <div class="exercise-header">
+                    <div class="form-group" style="flex: 1; margin-bottom: 0; margin-right: 10px;">
+                        <label for="${exerciseId}-type">Exercise Type:</label>
+                        <select id="${exerciseId}-type" class="exercise-type" required>
+                            <option value="Core">Core</option>
+                            <option value="Arms">Arms</option>
+                            <option value="Legs">Legs</option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn-remove" onclick="removeExercise('${exerciseId}')">Remove</button>
+                </div>
+                <div class="form-group">
+                    <label for="${exerciseId}-name">Exercise Name:</label>
+                    <input type="text" id="${exerciseId}-name" placeholder="e.g. Bench Press, Squats" required>
+                </div>
+                <div class="sets-container" id="${exerciseId}-sets"></div>
+                <button type="button" class="btn-add-set" onclick="addSet('${exerciseId}')">Add Set</button>
+            `;
+            
+            exercisesContainer.appendChild(exerciseDiv);
+            
+            // Add first set by default
+            addSet(exerciseId);
+        }
+        
+        function addSet(exerciseId) {
+            const setsContainer = document.getElementById(`${exerciseId}-sets`);
+            const setIndex = setsContainer.children.length + 1;
+            
+            const setRow = document.createElement('div');
+            setRow.className = 'set-row';
+            
+            setRow.innerHTML = `
+                <div class="set-label">Set ${setIndex}</div>
+                <input type="number" placeholder="Reps" min="1" required>
+                <input type="number" placeholder="Weight (lbs)" min="0" step="0.5" required>
+                <button type="button" class="btn-remove" onclick="removeSet(this.parentNode)">✕</button>
+            `;
+            
+            setsContainer.appendChild(setRow);
+        }
+        
+        function removeExercise(exerciseId) {
+            const exercise = document.getElementById(exerciseId);
+            if (exercise) {
+                exercise.remove();
+            }
+        }
+        
+        function removeSet(setRow) {
+            const setsContainer = setRow.parentNode;
+            setRow.remove();
+            
+            // Renumber remaining sets
+            const setRows = setsContainer.querySelectorAll('.set-row');
+            setRows.forEach((row, index) => {
+                row.querySelector('.set-label').textContent = `Set ${index + 1}`;
+            });
+        }
+        
+        function clearForm() {
+            if (confirm('Are you sure you want to clear all workout data?')) {
+                document.getElementById('exercisesContainer').innerHTML = '';
+                addExercise();
+                
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('workoutDate').value = today;
+                
+                document.getElementById('successMessage').style.display = 'none';
+            }
+        }
+        
+        function submitForm(event) {
+            event.preventDefault();
+            
+            // Validate form
+            const form = document.getElementById('workoutForm');
+            if (!form.checkValidity()) {
+                alert('Please fill in all required fields.');
+                return;
+            }
+            
+            // Here you would normally send the data to Google Sheets
+            // For this example, we'll just show success message
+            
+            // Collect form data
+            const workoutData = collectFormData();
+            console.log('Workout data to send:', workoutData);
+            
+            // Simulate sending to Google Sheets
+            simulateSendToGoogleSheets(workoutData);
+        }
+        
+        function collectFormData() {
+            const date = document.getElementById('workoutDate').value;
+            const exercises = [];
+            
+            document.querySelectorAll('.exercise-container').forEach(exerciseDiv => {
+                const exerciseId = exerciseDiv.id;
+                const type = document.getElementById(`${exerciseId}-type`).value;
+                const name = document.getElementById(`${exerciseId}-name`).value;
+                const sets = [];
+                
+                exerciseDiv.querySelectorAll('.set-row').forEach(setRow => {
+                    const inputs = setRow.querySelectorAll('input');
+                    sets.push({
+                        reps: inputs[0].value,
+                        weight: inputs[1].value
+                    });
+                });
+                
+                exercises.push({
+                    type,
+                    name,
+                    sets
+                });
+            });
+            
+            return {
+                date,
+                exercises
+            };
+        }
+        
+        function simulateSendToGoogleSheets(workoutData) {
+            // In a real implementation, this would be replaced with actual code
+            // to send data to Google Sheets using Google Sheets API
+            
+            setTimeout(() => {
+                // Show success message
+                const successMessage = document.getElementById('successMessage');
+                successMessage.style.display = 'block';
+                successMessage.textContent = 'Workout submitted successfully! Data would be sent to Google Sheets.';
+                
+                // Scroll to success message
+                successMessage.scrollIntoView({ behavior: 'smooth' });
+                
+                // Hide after 5 seconds
+                setTimeout(() => {
+                    successMessage.style.display = 'none';
+                }, 5000);
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
